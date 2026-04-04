@@ -1,28 +1,36 @@
 # =============================================================================
 # YOUR TERRITORY CONFIGURATION
-# This is the only file you need to edit to customise the monitor.
-# Change anything here and the next run will pick it up automatically.
+# This is the only file you need to edit.
+# After changing anything here, Railway will automatically redeploy
+# within a minute or two — no other steps needed.
 # =============================================================================
+
+
+# ---------------------------------------------------------------------------
+# POLLING INTERVAL
+# How many seconds to wait between feed checks.
+# 300 = 5 minutes (recommended — matches RSS feed update cadence).
+# Lower than 300 gives no meaningful speed benefit since the feeds
+# themselves don't update faster than every 5 minutes.
+# ---------------------------------------------------------------------------
+
+POLL_INTERVAL_SECONDS = 300
 
 
 # ---------------------------------------------------------------------------
 # DISCORD CHANNEL ROUTING
 #
-# Alerts are routed to two channels based on their AI score:
-#   #urgent    → scores 8, 9, 10  — act today
-#   #watch-list → scores 6, 7     — review when convenient
-#
-# Change these numbers to make routing stricter or looser.
+# Scores 8–10  → #urgent      (act today)
+# Scores 6–7   → #watch-list  (review when convenient)
+# Below 6      → suppressed
 # ---------------------------------------------------------------------------
 
-URGENT_THRESHOLD    = 8   # score 8+ goes to #urgent
-WATCHLIST_MIN       = 6   # score 6-7 goes to #watch-list
-                          # anything below WATCHLIST_MIN is suppressed entirely
+URGENT_THRESHOLD = 8
+WATCHLIST_MIN    = 6
 
 
 # ---------------------------------------------------------------------------
 # GEOGRAPHY
-# The monitor looks for any of these terms in a press release.
 # ---------------------------------------------------------------------------
 
 TERRITORY_US_STATES = [
@@ -50,7 +58,7 @@ TERRITORY_US_CITIES = [
     # Oregon
     "Portland", "Eugene", "Salem", "Bend",
     # Nevada
-    "Las Vegas", "Reno", "Henderson", "North Las Vegas",
+    "Las Vegas", "Reno", "Henderson",
     # Utah
     "Salt Lake City", "Provo", "Ogden", "St. George",
     # New Mexico
@@ -180,17 +188,17 @@ TRIGGER_LABELS = {
 }
 
 TRIGGER_COLORS = {
-    "acquisition":      0xE24B4A,   # red
-    "funding":          0xEF9F27,   # amber
-    "expansion":        0x1D9E75,   # green
-    "executive_change": 0x7F77DD,   # purple
-    "contract":         0x378ADD,   # blue
-    "product_launch":   0xD85A30,   # coral
+    "acquisition":      0xE24B4A,
+    "funding":          0xEF9F27,
+    "expansion":        0x1D9E75,
+    "executive_change": 0x7F77DD,
+    "contract":         0x378ADD,
+    "product_launch":   0xD85A30,
 }
 
 
 # ---------------------------------------------------------------------------
-# ENTERPRISE EXCLUSION — skip obvious large-company releases
+# ENTERPRISE EXCLUSION
 # ---------------------------------------------------------------------------
 
 ENTERPRISE_EXCLUSION_KEYWORDS = [
@@ -201,7 +209,7 @@ ENTERPRISE_EXCLUSION_KEYWORDS = [
 
 
 # ---------------------------------------------------------------------------
-# RSS FEEDS TO MONITOR
+# RSS FEEDS
 # ---------------------------------------------------------------------------
 
 RSS_FEEDS = [
@@ -213,8 +221,21 @@ RSS_FEEDS = [
 
 
 # ---------------------------------------------------------------------------
-# TIMING
-# The Action runs every 20 minutes; we look back 25 to avoid gaps.
+# LOOKBACK WINDOW
+# How far back (in minutes) to check for new releases each cycle.
+# At 5-minute polling we look back 8 minutes — a small overlap buffer
+# to catch anything published right at the boundary of the last run.
+# Deduplication in monitor.py prevents double-alerting on overlaps.
 # ---------------------------------------------------------------------------
 
-LOOKBACK_MINUTES = 25
+LOOKBACK_MINUTES = 8
+
+
+# ---------------------------------------------------------------------------
+# HEARTBEAT
+# The daily check-in fires once per day in the 15:00–15:06 UTC window
+# (8:00–8:06 AM Pacific). It goes to your #watch-list channel.
+# ---------------------------------------------------------------------------
+
+HEARTBEAT_HOUR_UTC   = 15   # 8 AM Pacific / 11 AM Eastern
+HEARTBEAT_MINUTE_UTC = 0
