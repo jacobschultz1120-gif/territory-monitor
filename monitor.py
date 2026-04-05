@@ -239,7 +239,12 @@ Return ONLY a valid JSON object — no markdown, no backticks, no text outside t
   "revenue_estimate": <best estimate of annual revenue, e.g. "$10M–$30M" — use any \
 signals in the release. Write "Unknown" if you have no basis for an estimate>,
   "revenue_confidence": <"low", "medium", or "high">,
-  "company_website": <company website URL if explicitly stated in the release, else null>
+  "company_website": <the company's most likely website URL. First look for it \
+explicitly in the press release. If not stated, infer the most probable URL from \
+the company name — e.g. "Pacific Ridge Foods" -> "www.pacificridgefoods.com". \
+Always return your best guess as a full URL starting with www. Append "(inferred)" \
+if guessing rather than reading it from the release. Return null only if the \
+company name is too generic to make any reasonable guess.>
 }
 
 Score 9–10: Clear immediate ERP trigger — acquisition needing consolidation, new CFO \
