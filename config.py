@@ -110,27 +110,80 @@ INDUSTRY_KEYWORDS = [
     "food manufacturing", "food distribution", "food processing",
     "food and beverage", "food & beverage", "food service",
     "craft beer", "brewery", "winery", "spirits", "distillery",
+    "restaurant", "catering", "meal kit",
     # Consumer Goods / CPG
     "consumer goods", "consumer products", "cpg", "fmcg",
     "personal care", "beauty", "cosmetics", "health and wellness",
     "supplement", "nutritional", "household goods", "cleaning products",
-    "pet products", "pet food", "baby products",
+    "pet products", "pet food", "baby products", "apparel", "fashion",
+    "footwear", "sporting goods", "toys", "furniture", "home goods",
     # Manufacturing & Industrial
     "manufacturing", "industrial", "fabrication", "production",
     "factory", "plant", "assembly", "contract manufacturing",
     "precision manufacturing", "metal fabrication", "plastics",
     "electronics manufacturing", "oem", "machine shop",
-    "sheet metal", "casting", "forging",
-    # Building Materials
+    "sheet metal", "casting", "forging", "equipment manufacturer",
+    "industrial equipment", "machinery", "tools", "automation",
+    "packaging", "printing",
+    # Building Materials / Construction / Energy
     "building materials", "construction materials", "lumber",
     "flooring", "roofing", "siding", "windows", "doors",
     "hardware", "paint", "coatings", "fasteners", "plumbing",
     "hvac", "insulation", "drywall", "concrete", "masonry",
     "millwork", "cabinetry", "tile", "stone", "countertop",
+    "construction", "contractor", "homebuilder", "general contractor",
+    "energy", "renewable energy", "solar", "oil and gas", "utilities",
+    "power", "infrastructure",
     # Retail / E-commerce / Distribution / Wholesale
     "retail", "e-commerce", "ecommerce", "direct-to-consumer",
     "dtc", "omnichannel", "wholesale", "distribution", "distributor",
     "supply chain", "fulfillment", "warehousing", "specialty retail",
+    "marketplace", "online store",
+    # Software / Technology
+    "software", "saas", "technology", "tech company", "cloud",
+    "platform", "digital", "cybersecurity", "data analytics",
+    "artificial intelligence", "machine learning", "fintech",
+    "edtech", "healthtech", "enterprise software",
+    # Health / Life Sciences
+    "health", "healthcare", "medical", "hospital", "clinic",
+    "dental", "pharmacy", "pharmaceutical", "biotech", "life sciences",
+    "diagnostics", "medical device", "health system",
+    "home health", "senior care", "behavioral health",
+    # Financial Services
+    "financial services", "insurance", "banking", "credit union",
+    "wealth management", "investment", "asset management",
+    "mortgage", "lending", "payments", "fintech",
+    # Consulting & IT Services
+    "consulting", "management consulting", "IT services",
+    "technology services", "systems integrator", "staffing",
+    "outsourcing", "professional services", "advisory",
+    "implementation partner",
+    # Nonprofits & Organizations
+    "nonprofit", "non-profit", "foundation", "association",
+    "501c3", "charity", "ngo", "social services",
+    "educational institution", "university", "college",
+    # Advertising / Media / Publishing
+    "advertising", "marketing agency", "media", "publishing",
+    "digital marketing", "pr agency", "content", "broadcast",
+    "streaming", "entertainment",
+    # Hospitality / Travel
+    "hospitality", "hotel", "resort", "restaurant group",
+    "travel", "tourism", "events", "venue", "lodging",
+    # Business Services
+    "business services", "facilities management", "property management",
+    "real estate", "security services", "janitorial",
+    "fleet management", "logistics", "freight",
+    # Consumer Services
+    "consumer services", "home services", "pest control",
+    "landscaping", "cleaning services", "fitness", "wellness",
+    "personal services", "childcare",
+    # Transportation / Logistics
+    "transportation", "trucking", "freight", "logistics",
+    "courier", "last mile", "shipping", "fleet",
+    "rail", "aviation",
+    # Public Sector / Government
+    "government contractor", "federal contractor", "state agency",
+    "municipality", "public sector", "defense contractor",
 ]
 
 
