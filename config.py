@@ -214,9 +214,10 @@ ENTERPRISE_EXCLUSION_KEYWORDS = [
 
 RSS_FEEDS = [
     "https://www.prnewswire.com/rss/news-releases-list.rss",
-    "https://www.businesswire.com/rss/home/?rss=G1",
     "https://www.globenewswire.com/RssFeed/country/United+States",
     "https://www.globenewswire.com/RssFeed/country/Canada",
+    "https://www.accesswire.com/newsroom/rss",
+    # BusinessWire removed — blocks automated requests from cloud IPs (403)
 ]
 
 
