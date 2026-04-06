@@ -165,10 +165,26 @@ def parse_pub_date(entry) -> datetime | None:
 
 def fetch_feed(url: str, lookback: datetime) -> list[dict]:
     src = source_name(url)
+    log.info(f"  Fetching {src}…")
     try:
-        parsed = feedparser.parse(url)
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/122.0.0.0 Safari/537.36"
+            )
+        }
+        response = requests.get(url, headers=headers, timeout=20)
+        response.raise_for_status()
+        parsed = feedparser.parse(response.content)
+    except requests.Timeout:
+        log.warning(f"  {src} timed out after 20s — skipping this cycle")
+        return []
+    except requests.RequestException as e:
+        log.warning(f"  Could not fetch {src}: {e}")
+        return []
     except Exception as e:
-        log.warning(f"Could not fetch {src}: {e}")
+        log.warning(f"  Unexpected error fetching {src}: {e}")
         return []
 
     candidates = []
@@ -239,12 +255,7 @@ Return ONLY a valid JSON object — no markdown, no backticks, no text outside t
   "revenue_estimate": <best estimate of annual revenue, e.g. "$10M–$30M" — use any \
 signals in the release. Write "Unknown" if you have no basis for an estimate>,
   "revenue_confidence": <"low", "medium", or "high">,
-  "company_website": <the company's most likely website URL. First look for it \
-explicitly in the press release. If not stated, infer the most probable URL from \
-the company name — e.g. "Pacific Ridge Foods" -> "www.pacificridgefoods.com". \
-Always return your best guess as a full URL starting with www. Append "(inferred)" \
-if guessing rather than reading it from the release. Return null only if the \
-company name is too generic to make any reasonable guess.>
+  "company_website": <company website URL if explicitly stated in the release, else null>
 }
 
 Score 9–10: Clear immediate ERP trigger — acquisition needing consolidation, new CFO \
@@ -570,6 +581,13 @@ def validate_env() -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def main():
+    import signal
+    def _shutdown(sig, frame):
+        log.info("Shutdown signal received — exiting cleanly")
+        raise SystemExit(0)
+    signal.signal(signal.SIGTERM, _shutdown)
+    signal.signal(signal.SIGINT, _shutdown)
+
     log.info("=" * 60)
     log.info("Territory Monitor starting up")
     log.info(f"Poll interval: every {POLL_INTERVAL_SECONDS // 60} minutes")
@@ -596,7 +614,11 @@ def main():
             log.warning(f"Heartbeat error: {e}")
 
         log.info(f"Sleeping {POLL_INTERVAL_SECONDS // 60} minutes…\n")
-        time.sleep(POLL_INTERVAL_SECONDS)
+        try:
+            time.sleep(POLL_INTERVAL_SECONDS)
+        except SystemExit:
+            log.info("Exiting cleanly")
+            return
 
 
 if __name__ == "__main__":
