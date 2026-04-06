@@ -213,11 +213,14 @@ ENTERPRISE_EXCLUSION_KEYWORDS = [
 # ---------------------------------------------------------------------------
 
 RSS_FEEDS = [
+    # PRNewswire — working, broad US coverage
     "https://www.prnewswire.com/rss/news-releases-list.rss",
+    # GlobeNewswire — working, strong mid-market and Canada coverage
     "https://www.globenewswire.com/RssFeed/country/United+States",
     "https://www.globenewswire.com/RssFeed/country/Canada",
-    "https://www.accesswire.com/newsroom/rss",
-    # BusinessWire removed — blocks automated requests from cloud IPs (403)
+    # EIN Presswire — open to automated access, good mid-market coverage
+    "https://www.einpresswire.com/rss/",
+    # BusinessWire and AccessWire removed — both block cloud server IPs (403)
 ]
 
 
