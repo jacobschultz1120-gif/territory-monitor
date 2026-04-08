@@ -232,39 +232,71 @@ def fetch_feed(url: str, lookback: datetime) -> list[dict]:
 # AI SCORING
 # ─────────────────────────────────────────────────────────────────────────────
 
-SCORE_PROMPT = """\
-You are a sales intelligence analyst for a NetSuite ERP account executive.
+SCORE_PROMPT = """You are a sales intelligence analyst for a NetSuite ERP account executive covering an open territory.
 
-The rep sells NetSuite to mid-market companies in these industries:
-  • Food & Beverage (manufacturers, distributors, brands)
-  • Consumer Goods / CPG
-  • Manufacturing & Industrial
-  • Building Materials (lumber, flooring, roofing, hardware, HVAC, etc.)
-  • Retail / E-commerce / Wholesale Distribution
+TERRITORY: AK, AZ, CA, CO, HI, ID, KS, MN, MT, NE, NV, NM, ND, OK, OR, SD, UT, WA, WY plus British Columbia, Saskatchewan, Northwest Territories, Yukon.
+Show the signal if the company HQ is in territory — even if the event happened elsewhere.
 
-Territory: AK, AZ, CA, CO, HI, ID, KS, MN, MT, NE, NV, NM, ND, OK, OR, SD, UT, \
-WA, WY plus British Columbia, Saskatchewan, Northwest Territories, Yukon.
+REVENUE SWEET SPOT: $0–$20M annual revenue. Companies that appear significantly above $20M (large enterprise, publicly traded, Fortune 500) should score 1–2 regardless of trigger. ZoomInfo often undercodes revenue — lean inclusive on companies that could be larger than they appear.
 
-Sweet spot: $5M–$100M annual revenue.
+AUTO-SUPPRESS (score 1–2 no matter what):
+  • Publicly traded / NYSE / NASDAQ companies — too large, wrong buyer profile
+  • Pre-seed or pre-revenue startups with no operating business yet
+  • Companies clearly headquartered outside territory with no territory connection
 
-Return ONLY a valid JSON object — no markdown, no backticks, no text outside the JSON.
+SCORING FRAMEWORK — apply in order:
+
+Step 1 — WHY NOW (the catalyst):
+  The single most important dimension. A clear catalyst can reach 8–10 on its own.
+
+  Strongest catalysts (can reach 9–10 alone):
+    • New CFO, Controller, VP Finance, or Director of Finance hire
+    • Acquisition or merger — two entities, two systems, one finance team
+    • First significant government or enterprise contract win — compliance forced
+
+  Strong catalysts (can reach 7–8 alone):
+    • Funding round (Series A–C) — board demands auditability and scale
+    • New geographic location, subsidiary, or entity formation
+    • Strategic partnership or major distribution agreement
+
+  Moderate catalysts (reach 5–7, need complexity to go higher):
+    • Product launch or new channel (DTC, ecommerce, wholesale)
+    • Expansion announcement without clear entity complexity
+
+  Weak or no catalyst (score 3–5 max):
+    • General growth announcement with no specific event
+    • Award, recognition, or milestone with no operational change
+
+Step 2 — OPERATIONAL COMPLEXITY (adds 1–2 points when present):
+  Any of the following signals push the score up:
+    • Multi-entity, multi-location, or multi-subsidiary structure
+    • Multi-currency or cross-border operations
+    • High transaction volume (distribution, fulfillment, manufacturing at scale)
+    • Inventory management complexity (SKUs, warehousing, supply chain)
+    • Revenue recognition complexity (subscriptions, contracts, milestones)
+    • Rapid headcount or revenue growth indicating system strain
+
+Step 3 — INDUSTRY FIT:
+  Highest fit: Food & Beverage, Manufacturing, Building Materials, Consumer Goods / CPG, Wholesale Distribution, Retail / E-commerce
+  Good fit: Software / SaaS, Healthcare services, Professional services, Nonprofits, Hospitality, Transportation / Logistics
+  Lower fit: Pure financial services, Real estate investment, Media / Publishing, Government agencies
+
+REVENUE ESTIMATION:
+  Use every available clue — funding size, deal value, employee count, number of locations, industry benchmarks, customer names mentioned.
+  Flag if a company appears to be miscoded (e.g. described as mid-market but mentions 500+ employees or national scale).
+
+Return ONLY a valid JSON object — no markdown, no backticks, nothing outside the JSON.
 
 {
   "score": <integer 1–10>,
-  "reason": <one plain-English sentence — why this is or is not a NetSuite opportunity>,
-  "revenue_estimate": <best estimate of annual revenue, e.g. "$10M–$30M" — use any \
-signals in the release. Write "Unknown" if you have no basis for an estimate>,
+  "reason": <one plain-English sentence — the most important factor driving this score>,
+  "why_now": <the specific catalyst identified, e.g. "New CFO hire" or "Series B funding" or "None visible">,
+  "complexity_signals": <list of operational complexity signals found, e.g. ["multi-location", "inventory management"] or []>,
+  "revenue_estimate": <best estimate, e.g. "$5M–$20M" or "Unknown">,
   "revenue_confidence": <"low", "medium", or "high">,
-  "company_website": <company website URL if explicitly stated in the release, else null>
+  "publicly_traded": <true if company appears to be publicly traded, false otherwise>,
+  "company_website": <company website URL if stated in release, otherwise infer from company name as www.companyname.com and append "(inferred)" — null only if name is too generic to guess>
 }
-
-Score 9–10: Clear immediate ERP trigger — acquisition needing consolidation, new CFO \
-at a scaling company, first government contract requiring compliance.
-Score 7–8: Strong signal — major geographic expansion, new revenue channel, \
-substantial funding with operational growth mandate.
-Score 5–6: Moderate — company is in the ICP and growing but ERP urgency unclear.
-Score 3–4: Weak — right industry, no clear ERP driver visible.
-Score 1–2: Not relevant — wrong industry, too large, or vanity PR.
 
 PRESS RELEASE:
 """
@@ -275,6 +307,7 @@ def score_with_ai(item: dict) -> dict:
     if not api_key:
         item.update({
             "ai_score": 5, "ai_reason": "AI scoring unavailable — API key not set",
+            "why_now": "—", "complexity_signals": [], "publicly_traded": False,
             "revenue_estimate": "Unknown", "revenue_confidence": "low",
             "company_website": None,
         })
@@ -297,11 +330,14 @@ def score_with_ai(item: dict) -> dict:
         item.update({
             "ai_score":           int(parsed.get("score", 0)),
             "ai_reason":          str(parsed.get("reason", "—")),
+            "why_now":            str(parsed.get("why_now", "—")),
+            "complexity_signals": parsed.get("complexity_signals", []),
+            "publicly_traded":    bool(parsed.get("publicly_traded", False)),
             "revenue_estimate":   str(parsed.get("revenue_estimate", "Unknown")),
             "revenue_confidence": str(parsed.get("revenue_confidence", "low")),
             "company_website":    parsed.get("company_website"),
         })
-        log.info(f"  AI score: {item['ai_score']}/10  —  {item['ai_reason'][:80]}")
+        log.info(f"  Score {item['ai_score']}/10 | Why now: {item['why_now']} | {item['ai_reason'][:60]}")
 
     except json.JSONDecodeError:
         log.warning(f"  AI returned invalid JSON — raw snippet: {raw[:100]}")
@@ -314,6 +350,7 @@ def score_with_ai(item: dict) -> dict:
         log.warning(f"  AI scoring error: {e}")
         item.update({
             "ai_score": 5, "ai_reason": f"AI error: {str(e)[:80]}",
+            "why_now": "—", "complexity_signals": [], "publicly_traded": False,
             "revenue_estimate": "Unknown", "revenue_confidence": "low",
             "company_website": None,
         })
@@ -357,6 +394,11 @@ def send_alert(item: dict) -> bool:
 
     color = TRIGGER_COLORS.get(trigger, 0x888780)
 
+    # Build complexity signal string
+    complexity = item.get("complexity_signals", [])
+    complexity_str = "  •  ".join(complexity) if complexity else "None identified"
+    traded_note = "  ⚠️  Publicly traded" if item.get("publicly_traded") else ""
+
     fields = [
         {
             "name":   f"Score  {score}/10  •  {channel_tag(score)}",
@@ -369,19 +411,29 @@ def send_alert(item: dict) -> bool:
             "inline": False,
         },
         {
+            "name":   "Why now",
+            "value":  item.get("why_now", "—") + traded_note,
+            "inline": True,
+        },
+        {
+            "name":   "Trigger type",
+            "value":  TRIGGER_LABELS.get(trigger, "Signal"),
+            "inline": True,
+        },
+        {
+            "name":   "Operational complexity",
+            "value":  complexity_str,
+            "inline": False,
+        },
+        {
             "name":   "Estimated revenue",
             "value":  revenue_str,
             "inline": True,
         },
         {
-            "name":   "Trigger",
-            "value":  TRIGGER_LABELS.get(trigger, "Signal"),
-            "inline": True,
-        },
-        {
             "name":   "Territory match",
             "value":  f"{item.get('geo_match', '—')}  •  {item.get('industry_match', '—').title()}",
-            "inline": False,
+            "inline": True,
         },
     ]
 
